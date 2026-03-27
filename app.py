@@ -11,7 +11,6 @@ st.set_page_config(page_title="HR Attrition Dashboard", layout="wide")
 
 # --- Load Model & Data ---
 @st.cache_resource
-@st.cache_resource
 def load_resources():
     # Gets the absolute path to the folder where app.py is located
     base_path = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +26,10 @@ def load_resources():
     model = joblib.load(model_path)
     X_test = pd.read_csv(data_path)
     return model, X_test
+
+# --- CRITICAL FIX: CALL THE FUNCTION HERE ---
+# This makes 'model' and 'X_test' available to the rest of the script
+model, X_test = load_resources()
 
 # --- Helper: Get Feature Importance ---
 def get_importance_df(model):
@@ -49,14 +52,13 @@ def get_importance_df(model):
 st.sidebar.header("🕹️ Employee Simulator")
 st.sidebar.write("Modify parameters to see real-time predictions.")
 
-# Select a base employee from the test set
+# Now 'X_test' is defined and this line will work!
 sample_idx = st.sidebar.number_input("Select Employee Index", 0, len(X_test)-1, 0)
 input_data = X_test.iloc[[sample_idx]].copy()
 
 st.sidebar.divider()
 st.sidebar.subheader("Adjust Factors")
 
-# Sidebar Selectors (Corrected with st.sidebar prefix)
 overtime_input = st.sidebar.selectbox(
     "Overtime Status", 
     ["Yes", "No"], 
@@ -102,7 +104,6 @@ with tab1:
 
     with col2:
         st.subheader("Current Profile Snapshot")
-        # Displaying a clean view of the data being analyzed
         display_cols = ['Age', 'JobRole', 'Department', 'YearsAtCompany', 'MonthlyIncome', 'OverTime']
         st.table(input_data[display_cols])
 
@@ -113,8 +114,12 @@ with tab2:
     
     with col_img:
         st.subheader("Confusion Matrix")
-        if os.path.exists('models/confusion_matrix.png'):
-            st.image('models/confusion_matrix.png', use_container_width=True)
+        # Added absolute path check for image as well
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        cm_path = os.path.join(base_path, 'models', 'confusion_matrix.png')
+        
+        if os.path.exists(cm_path):
+            st.image(cm_path, use_container_width=True)
         else:
             st.warning("Confusion Matrix image not found in 'models/'. Run evaluate.py first.")
     
@@ -123,7 +128,6 @@ with tab2:
         importance_df = get_importance_df(model)
         
         fig, ax = plt.subplots(figsize=(10, 6))
-        # Use a professional color palette
         sns.barplot(data=importance_df, x='Importance', y='Feature', palette='magma', ax=ax)
         ax.set_title("Impact Score on Model Decision")
         st.pyplot(fig)
