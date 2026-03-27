@@ -1,7 +1,8 @@
 pandas
-numpy
-matplotlib
-seaborn
 scikit-learn
 imbalanced-learn
 joblib
+matplotlib
+seaborn
+pillow
+streamlit
