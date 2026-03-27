@@ -11,13 +11,22 @@ st.set_page_config(page_title="HR Attrition Dashboard", layout="wide")
 
 # --- Load Model & Data ---
 @st.cache_resource
+@st.cache_resource
 def load_resources():
-    # Loading the model and test data saved in previous steps
-    model = joblib.load('models/best_model.pkl')
-    X_test = pd.read_csv('data/X_test.csv')
+    # Gets the absolute path to the folder where app.py is located
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    
+    model_path = os.path.join(base_path, 'models', 'best_model.pkl')
+    data_path = os.path.join(base_path, 'data', 'X_test.csv')
+    
+    # Safety Check: Show a nice error message if files are still missing
+    if not os.path.exists(data_path):
+        st.error(f"⚠️ Data file not found on server at: {data_path}")
+        st.stop()
+        
+    model = joblib.load(model_path)
+    X_test = pd.read_csv(data_path)
     return model, X_test
-
-model, X_test = load_resources()
 
 # --- Helper: Get Feature Importance ---
 def get_importance_df(model):
